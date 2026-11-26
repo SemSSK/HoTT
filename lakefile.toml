@@ -1,0 +1,10 @@
+name = "HomotopyTypeTheory"
+version = "0.1.0"
+defaultTargets = ["homotopy_type_theory"]
+
+[[lean_lib]]
+name = "HoTT"
+
+[[lean_exe]]
+name = "homotopy_type_theory"
+root = "Main"

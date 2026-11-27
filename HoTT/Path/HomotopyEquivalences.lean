@@ -170,11 +170,9 @@ def IsEquiv.into_QInv {f: A -> B} (isequiv: IsEquiv f): QInv f
     )
     let step1 : (isequiv.left_inv ∘ (f ∘ isequiv.right_inv) ∘ f) ~ isequiv.right_inv ∘ f
     := λ x => (
-      let step0 : isequiv.left_inv ∘ f ∘ isequiv.right_inv ~ (isequiv.left_inv ∘ f) ∘ isequiv.right_inv
-      := hom.composition_assoc;
       let step1 : (isequiv.left_inv ∘ f) ∘ isequiv.right_inv ~ isequiv.right_inv
       := λ x => isequiv.proof_of_left_inv (isequiv.right_inv x);
-      (step0.trans step1) (f x)
+      (step1) (f x)
     )
     step1.symm.trans step0
   )
@@ -182,8 +180,8 @@ def IsEquiv.into_QInv {f: A -> B} (isequiv: IsEquiv f): QInv f
 
 
 structure TEquiv (A B: Type u) where
-  f: A -> B
-  proof_of_equiv: IsEquiv f
+  func: A -> B
+  proof_of_equiv: IsEquiv func
 
 
 infix:50 " ≃ " => TEquiv
@@ -192,7 +190,7 @@ infix:50 " ≃ " => TEquiv
 
 def TEquiv.refl {A: Type u} : A ≃ A
 := {
-  f := id
+  func := id
   proof_of_equiv := {
     right_inv := id
     proof_of_right_inv := (Path.refl_ .)
@@ -205,43 +203,32 @@ def TEquiv.symm {A B: Type u} {f: A ≃ B} : B ≃ A
 :=
   let qinv :=  f.proof_of_equiv.into_QInv
   {
-    f := qinv.inv
+    func := qinv.inv
     proof_of_equiv := qinv.symm.into_IsEquiv
   }
 
+
+
 def TEquiv.trans {A B C: Type u} {f: A ≃ B} {g: B ≃ C} : A ≃ C
 :=
-  let func :=  g.f ∘ f.f
+  let fqinv := f.proof_of_equiv.into_QInv
+  let gqinv := g.proof_of_equiv.into_QInv
+  let func :=  g.func ∘ f.func
   let proof_of_qinv : QInv func
   := {
-    inv := sorry
-    proof_of_right_inv := sorry
-    proof_of_left_inv := sorry
+    inv := fqinv.inv ∘ gqinv.inv
+    proof_of_right_inv := (
+      let step : g.func ∘ (f.func ∘ fqinv.inv) ∘ gqinv.inv ~ g.func ∘ gqinv.inv
+      := λ x => g.func ⋆ fqinv.proof_of_right_inv (gqinv.inv x)
+      step.trans gqinv.proof_of_right_inv
+    )
+    proof_of_left_inv := (
+      let step : fqinv.inv ∘ gqinv.inv ∘ g.func ∘ f.func  ~  fqinv.inv ∘ f.func
+      := λ x => fqinv.inv ⋆ gqinv.proof_of_left_inv (f.func x)
+      step.trans fqinv.proof_of_left_inv
+    )
   }
   {
-    f := func
+    func := func
     proof_of_equiv := proof_of_qinv.into_IsEquiv
   }
-
-
--- (
---       let f_qinv := f.proof_of_equiv.into_QInv
---       let g_qinv := g.proof_of_equiv.into_QInv
---       let qinv : QInv (g.f ∘ f.f)
---       := {
---         g := f_qinv.g ∘ g_qinv.g
---         right_inv := (
---           let step0 : (g.f ∘ f.f) ∘ f_qinv.g ∘ g_qinv.g ~ ((g.f ∘ f.f) ∘ f_qinv.g) ∘ g_qinv.g
---           := hom.composition_assoc
---           let step1 : ((g.f ∘ f.f) ∘ f_qinv.g) ∘ g_qinv.g ~ g.f ∘ (f.f ∘ f_qinv.g) ∘ g_qinv.g
---           := λ x => hom.composition_assoc (g_qinv.g x)
---           let step2 : g.f ∘ (f.f ∘ f_qinv.g) ∘ g_qinv.g ~ g.f ∘ g_qinv.g
---           := λ x => (λ p => g.f p) ⋆ f_qinv.right_inv (g_qinv.g x)
---           step0.trans step1
---           |>.trans step2
---           |>.trans g_qinv.right_inv
---         )
---         left_inv := sorry
---       }
---       sorry
---     )
